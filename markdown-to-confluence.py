@@ -210,15 +210,3 @@ for markdown_file in markdown_files:
     else:
         create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload)
 
-# Create the Confluence page and upload images
-auth = HTTPBasicAuth(username, password)
-folder_name = os.path.dirname(markdown_file)
-if folder_name:
-    parent_id = get_page_id(base_url, auth, space_key, folder_name)
-    if not parent_id:
-        print(f"Creating parent page: {folder_name}")
-        create_confluence_page(base_url, username, password, space_key, folder_name, "", image_dir)
-        parent_id = get_page_id(base_url, auth, space_key, folder_name)
-    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, parent_id)
-else:
-    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload)
