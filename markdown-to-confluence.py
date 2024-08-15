@@ -95,7 +95,13 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         if page_id:
             # Update the existing page
             api_endpoint = f"{base_url}/rest/api/content/{page_id}"
-            page_data["version"] = {"number": response.json()["version"]["number"] + 1}
+            # Fetch the current version number of the existing page
+            version_response = requests.get(api_endpoint, auth=auth)
+            version_response.raise_for_status()
+            current_version = version_response.json()["version"]["number"]
+
+            # Update the page with the new content
+            page_data["version"] = {"number": current_version + 1}
             response = requests.put(
                 api_endpoint,
                 auth=auth,
