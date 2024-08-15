@@ -191,7 +191,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         # Process the specific file provided as an argument
-        markdown_files = [sys.argv[1]]
+        markdown_file = os.path.join(base_dir, sys.argv[1])
+        markdown_files = [markdown_file]
     else:
         # Process all markdown files in the base_dir
         markdown_files = find_markdown_files(base_dir)
