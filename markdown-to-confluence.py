@@ -24,10 +24,13 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
 
     # Convert [[Page Name]] to [Page Name]
-    content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{re.sub(r"[^\w\s]", "", m.group(1)).replace(" ", "+")}]', content)
+    def process_page_name(page_name):
+        return re.sub(r"[^\w\s]", "", page_name).replace(" ", "+")
+
+    content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
     
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
-    content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{re.sub(r"[^\w\s]", "", m.group(1)).replace(" ", "+")}]', content)
+    content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
     
     # Convert headings
     content = re.sub(r'^(#{1})\s*(.*)', r'h1. \2', content, flags=re.MULTILINE)
