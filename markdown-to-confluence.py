@@ -146,6 +146,7 @@ confluence_content = convert_markdown_to_confluence(markdown_content, base_url, 
 title = os.path.splitext(os.path.basename(markdown_file))[0]
 
 # Create the Confluence page and upload images
+auth = HTTPBasicAuth(username, password)
 folder_name = os.path.dirname(markdown_file)
 if folder_name:
     parent_id = get_page_id(base_url, auth, space_key, folder_name)
