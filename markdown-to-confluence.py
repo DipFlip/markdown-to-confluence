@@ -39,6 +39,7 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     content = re.sub(r'^(#{4})\s*(.*)', r'h4. \2', content, flags=re.MULTILINE)
     content = re.sub(r'^(#{5})\s*(.*)', r'h5. \2', content, flags=re.MULTILINE)
     content = re.sub(r'^(#{6})\s*(.*)', r'h6. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{7,})\s*(.*)', r'\2', content, flags=re.MULTILINE)
 
     # Convert tags to labels
     labels = re.findall(r'#(\w+)', content)
