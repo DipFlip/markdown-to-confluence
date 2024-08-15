@@ -13,7 +13,10 @@ def read_markdown_file(filename):
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     print("Original markdown content:")
     print(markdown_content)
-    # Convert image links
+    images_to_upload = []
+
+    # Convert image links and store them in images_to_upload
+    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: images_to_upload.append(m.group(1)) or f'!{m.group(1)}!', markdown_content)
     content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', markdown_content)
     print("After converting image links with ![[...]]:")
     print(content)
@@ -52,7 +55,7 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     print("After re-converting image links with ![...](...):")
     print(content)
     
-    return content
+    return content, images_to_upload
 
 def upload_image(base_url, auth, space_key, page_id, image_path):
     api_endpoint = f"{base_url}/rest/api/content/{page_id}/child/attachment"
@@ -92,7 +95,7 @@ def get_page_id(base_url, auth, space_key, title):
         return response.json()['results'][0]['id']
     return None
 
-def create_confluence_page(base_url, username, password, space_key, title, content, image_dir, parent_id=None):
+def create_confluence_page(base_url, username, password, space_key, title, content, image_dir, images_to_upload, parent_id=None):
     auth = HTTPBasicAuth(username, password)
     api_endpoint = f"{base_url}/rest/api/content"
 
@@ -152,11 +155,8 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         page_url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
         print(f"View the page at: {page_url}")
 
-        # Upload images
-        image_pattern = r'!\s*([^\s!]+)\s*!'
-        print(f"comparing content: {content}")
-        for match in re.finditer(image_pattern, content):
-            image_filename = match.group(1).strip()
+        # Upload images from images_to_upload list
+        for image_filename in images_to_upload:
             image_path = os.path.join(image_dir, image_filename)
             print(f"Trying to upload image: {image_path}")
             if os.path.exists(image_path):
@@ -188,7 +188,7 @@ image_dir = os.path.join(base_dir, "Images")
 
 # Read and process the Markdown file
 markdown_content = read_markdown_file(os.path.join(base_dir, markdown_file))
-confluence_content = convert_markdown_to_confluence(markdown_content, base_url, space_key)
+confluence_content, images_to_upload = convert_markdown_to_confluence(markdown_content, base_url, space_key)
 
 # Use the filename (without .md) as the title
 title = os.path.splitext(os.path.basename(markdown_file))[0]
@@ -202,6 +202,6 @@ if folder_name:
         print(f"Creating parent page: {folder_name}")
         create_confluence_page(base_url, username, password, space_key, folder_name, "", image_dir)
         parent_id = get_page_id(base_url, auth, space_key, folder_name)
-    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, parent_id)
+    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, parent_id)
 else:
-    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir)
+    create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload)
