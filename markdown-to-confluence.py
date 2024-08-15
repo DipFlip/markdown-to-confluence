@@ -165,15 +165,15 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         print(f"An unexpected error occurred: {err}")
 
 # Confluence details
-base_url = "http://localhost:8090"
-username = "admin"
-password = "your_password"  # Replace with your actual password
-space_key = "TEST"
+base_url = os.getenv("BASE_URL")
+username = os.getenv("USERNAME")
+password = os.getenv("PASSWORD")
+space_key = os.getenv("SPACE_KEY")
 
 # Markdown file and image directory
-base_dir = "/home/emil/repos/anp-wiki/content"
+base_dir = os.getenv("BASE_DIR")
 markdown_file = "LAMP systems/Polaris-LAMP.md"  # Replace with your actual filename
-image_dir = os.path.join(base_dir, "Images")
+image_dir = os.getenv("IMAGE_DIR")
 
 # Read and process the Markdown file
 markdown_content = read_markdown_file(os.path.join(base_dir, markdown_file))
