@@ -153,7 +153,7 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         print(f"View the page at: {page_url}")
 
         # Upload images
-        image_pattern = r'!\[\[([^\]]+)\]\]'
+        image_pattern = r'!\s*([^\s!]+)\s*!'
         for match in re.finditer(image_pattern, content):
             image_filename = match.group(1).strip()
             image_path = os.path.join(image_dir, image_filename)
