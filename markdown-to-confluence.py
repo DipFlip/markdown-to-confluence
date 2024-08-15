@@ -5,6 +5,10 @@ import os
 import mimetypes
 from requests.auth import HTTPBasicAuth
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def read_markdown_file(filename):
     with open(filename, 'r', encoding='utf-8') as file:
