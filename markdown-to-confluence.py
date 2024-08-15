@@ -224,7 +224,7 @@ if __name__ == "__main__":
     for markdown_file in markdown_files:
         # Read and process the Markdown file
         markdown_content = read_markdown_file(markdown_file)
-        confluence_content, images_to_upload = convert_markdown_to_confluence(markdown_content, base_url, space_key)
+        confluence_content, images_to_upload, labels = convert_markdown_to_confluence(markdown_content, base_url, space_key)
 
         # Use the filename (without .md) as the title
         title = os.path.splitext(os.path.basename(markdown_file))[0]
