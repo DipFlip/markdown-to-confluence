@@ -17,6 +17,8 @@ def read_markdown_file(filename):
             end_index = content.find('---', 3)
             if end_index != -1:
                 content = content[end_index + 3:].strip()
+        # Remove the line '--------------TAGS-----------------'
+        content = re.sub(r'^--------------TAGS-----------------\s*', '', content, flags=re.MULTILINE)
         return content
 
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
