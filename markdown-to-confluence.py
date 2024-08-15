@@ -116,15 +116,16 @@ password = "your_password"  # Replace with your actual password
 space_key = "TEST"
 
 # Markdown file and image directory
-markdown_file = "Polaris-LAMP.md"  # Replace with your actual filename
-image_dir = "/home/emil/repos/anp-wiki/content/Images"
+base_dir = "/home/emil/repos/anp-wiki/content"
+markdown_file = "Folder/Polaris-LAMP.md"  # Replace with your actual filename
+image_dir = os.path.join(base_dir, "Images")
 
 # Read and process the Markdown file
-markdown_content = read_markdown_file(markdown_file)
+markdown_content = read_markdown_file(os.path.join(base_dir, markdown_file))
 confluence_content = convert_markdown_to_confluence(markdown_content, base_url, space_key)
 
 # Use the filename (without .md) as the title
 title = os.path.splitext(os.path.basename(markdown_file))[0]
 
 # Create the Confluence page and upload images
-create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir)
+create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, base_dir)
