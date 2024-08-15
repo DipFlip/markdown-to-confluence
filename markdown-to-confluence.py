@@ -90,18 +90,34 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         page_data["ancestors"] = [{"id": parent_id}]
 
     try:
-        response = requests.post(
-            api_endpoint,
-            auth=auth,
-            headers={"Content-Type": "application/json"},
-            data=json.dumps(page_data),
-            verify=False  # Only use this for testing with self-signed certificates
-        )
+        # Check if the page already exists
+        page_id = get_page_id(base_url, auth, space_key, title)
+        if page_id:
+            # Update the existing page
+            api_endpoint = f"{base_url}/rest/api/content/{page_id}"
+            page_data["version"] = {"number": response.json()["version"]["number"] + 1}
+            response = requests.put(
+                api_endpoint,
+                auth=auth,
+                headers={"Content-Type": "application/json"},
+                data=json.dumps(page_data),
+                verify=False  # Only use this for testing with self-signed certificates
+            )
+            response.raise_for_status()
+            print("Page updated successfully!")
+        else:
+            # Create a new page
+            response = requests.post(
+                api_endpoint,
+                auth=auth,
+                headers={"Content-Type": "application/json"},
+                data=json.dumps(page_data),
+                verify=False  # Only use this for testing with self-signed certificates
+            )
+            response.raise_for_status()
+            print("Page created successfully!")
+            page_id = response.json()['id']
 
-        response.raise_for_status()
-
-        print("Page created successfully!")
-        page_id = response.json()['id']
         page_url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
         print(f"View the page at: {page_url}")
 
