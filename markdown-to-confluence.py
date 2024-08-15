@@ -135,7 +135,7 @@ space_key = "TEST"
 
 # Markdown file and image directory
 base_dir = "/home/emil/repos/anp-wiki/content"
-markdown_file = "Folder/Polaris-LAMP.md"  # Replace with your actual filename
+markdown_file = "LAMP systems/Polaris-LAMP.md"  # Replace with your actual filename
 image_dir = os.path.join(base_dir, "Images")
 
 # Read and process the Markdown file
