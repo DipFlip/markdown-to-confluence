@@ -12,7 +12,12 @@ load_dotenv()
 
 def read_markdown_file(filename):
     with open(filename, 'r', encoding='utf-8') as file:
-        return file.read()
+        content = file.read()
+        if content.startswith('---'):
+            end_index = content.find('---', 3)
+            if end_index != -1:
+                content = content[end_index + 3:].strip()
+        return content
 
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     images_to_upload = []
