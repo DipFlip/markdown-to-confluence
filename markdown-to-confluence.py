@@ -48,7 +48,7 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
     
-    return content, images_to_upload
+    return content, images_to_upload, labels
 
 def upload_image(base_url, auth, space_key, page_id, image_path):
     api_endpoint = f"{base_url}/rest/api/content/{page_id}/child/attachment"
@@ -95,7 +95,7 @@ def get_page_id(base_url, auth, space_key, title):
         return response.json()['results'][0]['id']
     return None
 
-def create_confluence_page(base_url, username, password, space_key, title, content, image_dir, images_to_upload, parent_id=None):
+def create_confluence_page(base_url, username, password, space_key, title, content, image_dir, images_to_upload, labels, parent_id=None):
     auth = HTTPBasicAuth(username, password)
     api_endpoint = f"{base_url}/rest/api/content"
 
@@ -236,9 +236,9 @@ if __name__ == "__main__":
             parent_id = get_page_id(base_url, auth, space_key, folder_name)
             if not parent_id:
                 print(f"Creating parent page: {folder_name}")
-                create_confluence_page(base_url, username, password, space_key, folder_name, "", image_dir, [])
+                create_confluence_page(base_url, username, password, space_key, folder_name, "", image_dir, [], [])
                 parent_id = get_page_id(base_url, auth, space_key, folder_name)
-            create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, parent_id)
+            create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, labels, parent_id)
         else:
-            create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload)
+            create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, labels)
 
