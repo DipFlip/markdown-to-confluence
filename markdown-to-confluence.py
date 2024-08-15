@@ -31,7 +31,7 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
 
     def process_page_name(page_name):
-        return re.sub(r"[^\w\s]", "", page_name).replace(" ", "+")
+        return re.sub(r"[^\w\s()]", "", page_name).replace(" ", "+")
 
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
     content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
@@ -40,8 +40,8 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     
     
     # Convert tags to labels
-    labels = re.findall(r'#(\w+)', content)
-    content = re.sub(r'#(\w+)', '', content)
+    labels = re.findall(r'#(\S+)', content)
+    content = re.sub(r'#(\S+)', '', content)
     content = re.sub(r'^\d+\.\s', '# ', content, flags=re.MULTILINE)
     
     # Convert headings
