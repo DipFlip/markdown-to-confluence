@@ -170,8 +170,8 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
 
 # Confluence details
 base_url = os.getenv("BASE_URL")
-username = os.getenv("USERNAME")
-password = os.getenv("PASSWORD")
+username = os.getenv("CONFLUENCE_USERNAME")
+password = os.getenv("CONFLUENCE_PASSWORD")
 space_key = os.getenv("SPACE_KEY")
 
 # Markdown file and image directory
