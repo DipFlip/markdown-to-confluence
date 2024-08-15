@@ -8,6 +8,7 @@ This script converts Markdown files to Confluence pages and uploads them to a sp
 - Handles image uploads.
 - Converts Markdown links and headings to Confluence format.
 - Supports nested folders by creating parent pages for each folder.
+- Takes #tags and adds as confluence labels.
 
 ## Prerequisites
 
@@ -19,8 +20,8 @@ This script converts Markdown files to Confluence pages and uploads them to a sp
 
 1. Clone the repository:
     ```bash
-    git clone <repository-url>
-    cd <repository-directory>
+    git clone https://github.com/DipFlip/markdown-to-confluence.git
+    cd markdown-to-confluence
     ```
 
 2. Install the required Python libraries:
@@ -31,11 +32,11 @@ This script converts Markdown files to Confluence pages and uploads them to a sp
 3. Create a `.env` file in the root directory of the project and add the following environment variables:
     ```env
     BASE_URL=http://localhost:8090
-    CONFLUENCE_USERNAME=admin
-    CONFLUENCE_PASSWORD=your_password  # Replace with your actual password
-    SPACE_KEY=TEST
-    BASE_DIR=/path/to/your/markdown/files
-    IMAGE_DIR=/path/to/your/image/files
+    CONFLUENCE_USERNAME=your_username
+    CONFLUENCE_PASSWORD=your_password
+    SPACE_KEY=NAMEOFSPACE
+    BASE_DIR=/abssolute/path/to/your/wiki/content
+    IMAGE_DIR=relative/from/base_dir/to/image/dir
     ```
 
 4. Ensure your Confluence instance is running and accessible at the `BASE_URL` specified in the `.env` file.
