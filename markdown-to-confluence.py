@@ -45,6 +45,13 @@ def upload_image(base_url, auth, space_key, page_id, image_path):
     image_filename = os.path.basename(image_path)
     mime_type, _ = mimetypes.guess_type(image_path)
     
+    # Check if the image already exists
+    existing_attachments = requests.get(api_endpoint, auth=auth).json()
+    for attachment in existing_attachments.get('results', []):
+        if attachment['title'] == image_filename:
+            print(f"Image {image_filename} already exists. Skipping upload.")
+            return True
+    
     with open(image_path, 'rb') as file:
         files = {'file': (image_filename, file, mime_type)}
         data = {'minorEdit': 'true'}
