@@ -29,7 +29,14 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
     content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', content)
     
-    # Convert numbered lists
+    # Convert headings
+    content = re.sub(r'^(#{1})\s*(.*)', r'h1. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{2})\s*(.*)', r'h2. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{3})\s*(.*)', r'h3. \2', content, flags=re.MULTILINE)
+
+    # Convert tags to labels
+    labels = re.findall(r'#(\w+)', content)
+    content = re.sub(r'#(\w+)', '', content)
     content = re.sub(r'^\d+\.\s', '# ', content, flags=re.MULTILINE)
     
     # Convert links (but not image links)
@@ -144,6 +151,23 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
             response.raise_for_status()
             print("Page created successfully!")
             page_id = response.json()['id']
+
+        # Add labels to the page
+        if labels:
+            label_endpoint = f"{base_url}/rest/api/content/{page_id}/label"
+            label_data = [{"prefix": "global", "name": label} for label in labels]
+            label_response = requests.post(
+                label_endpoint,
+                auth=auth,
+                headers={"Content-Type": "application/json"},
+                data=json.dumps(label_data),
+                verify=False  # Only use this for testing with self-signed certificates
+            )
+            if label_response.status_code == 200:
+                print("Labels added successfully!")
+            else:
+                print(f"Failed to add labels. Status code: {label_response.status_code}")
+                print(f"Response: {label_response.text}")
 
         page_url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
         print(f"View the page at: {page_url}")
