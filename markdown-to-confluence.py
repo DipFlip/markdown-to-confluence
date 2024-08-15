@@ -179,12 +179,36 @@ base_dir = os.getenv("BASE_DIR")
 markdown_file = "LAMP systems/Polaris-LAMP.md"  # Replace with your actual filename
 image_dir = os.getenv("IMAGE_DIR")
 
-# Read and process the Markdown file
-markdown_content = read_markdown_file(os.path.join(base_dir, markdown_file))
-confluence_content, images_to_upload = convert_markdown_to_confluence(markdown_content, base_url, space_key)
+def find_markdown_files(base_dir):
+    markdown_files = []
+    for root, _, files in os.walk(base_dir):
+        for file in files:
+            if file.endswith(".md"):
+                markdown_files.append(os.path.join(root, file))
+    return markdown_files
 
-# Use the filename (without .md) as the title
-title = os.path.splitext(os.path.basename(markdown_file))[0]
+markdown_files = find_markdown_files(base_dir)
+
+for markdown_file in markdown_files:
+    # Read and process the Markdown file
+    markdown_content = read_markdown_file(markdown_file)
+    confluence_content, images_to_upload = convert_markdown_to_confluence(markdown_content, base_url, space_key)
+
+    # Use the filename (without .md) as the title
+    title = os.path.splitext(os.path.basename(markdown_file))[0]
+
+    # Create the Confluence page and upload images
+    auth = HTTPBasicAuth(username, password)
+    folder_name = os.path.dirname(markdown_file).replace(base_dir, "").strip("/")
+    if folder_name:
+        parent_id = get_page_id(base_url, auth, space_key, folder_name)
+        if not parent_id:
+            print(f"Creating parent page: {folder_name}")
+            create_confluence_page(base_url, username, password, space_key, folder_name, "", image_dir)
+            parent_id = get_page_id(base_url, auth, space_key, folder_name)
+        create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload, parent_id)
+    else:
+        create_confluence_page(base_url, username, password, space_key, title, confluence_content, image_dir, images_to_upload)
 
 # Create the Confluence page and upload images
 auth = HTTPBasicAuth(username, password)
