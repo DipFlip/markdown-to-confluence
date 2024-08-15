@@ -32,19 +32,20 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
     
     
-    # Convert headings
-    content = re.sub(r'^(#{1})\s*(.*)', r'h1. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{2})\s*(.*)', r'h2. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{3})\s*(.*)', r'h3. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{4})\s*(.*)', r'h4. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{5})\s*(.*)', r'h5. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{6})\s*(.*)', r'h6. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{7,})\s*(.*)', r'\2', content, flags=re.MULTILINE)
-
     # Convert tags to labels
     labels = re.findall(r'#(\w+)', content)
     content = re.sub(r'#(\w+)', '', content)
     content = re.sub(r'^\d+\.\s', '# ', content, flags=re.MULTILINE)
+    
+    # Convert headings
+    content = re.sub(r'^(#{7,})\s*(.*)', r'\2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{6})\s*(.*)', r'h6. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{5})\s*(.*)', r'h5. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{4})\s*(.*)', r'h4. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{3})\s*(.*)', r'h3. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{2})\s*(.*)', r'h2. \2', content, flags=re.MULTILINE)
+    content = re.sub(r'^(#{1})\s*(.*)', r'h1. \2', content, flags=re.MULTILINE)
+
     
     # Convert links (but not image links)
     content = re.sub(r'\[([^\]!]+)\]\(([^)]+)\)', r'[\1|\2]', content)
