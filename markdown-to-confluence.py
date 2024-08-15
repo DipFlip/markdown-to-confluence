@@ -24,7 +24,7 @@ def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     content = re.sub(r'\[([^\]!]+)\]\(([^)]+)\)', r'[\1|\2]', content)
     
     # Convert image links
-    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', content)
+    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{os.path.basename(m.group(1))}!', content)
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
     
     return content
@@ -109,7 +109,7 @@ def create_confluence_page(base_url, username, password, space_key, title, conte
         image_pattern = r'!\[\[([^\]]+)\]\]'
         for match in re.finditer(image_pattern, content):
             image_filename = match.group(1)
-            image_path = os.path.join(image_dir, image_filename)
+            image_path = os.path.join(image_dir, os.path.basename(image_filename))
             print(f"Trying to upload image: {image_path}")
             if os.path.exists(image_path):
                 upload_image(base_url, auth, space_key, page_id, image_path)
