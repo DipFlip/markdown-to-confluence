@@ -11,49 +11,31 @@ def read_markdown_file(filename):
         return file.read()
 
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
-    print("Original markdown content:")
-    print(markdown_content)
     images_to_upload = []
 
     # Convert image links and store them in images_to_upload
     content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: images_to_upload.append(m.group(1)) or f'!{m.group(1)}!', markdown_content)
     content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', markdown_content)
-    print("After converting image links with ![[...]]:")
-    print(content)
     
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
-    print("After converting image links with ![...](...):")
-    print(content)
 
     # Convert [[Page Name]] to [Page Name]
     content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', content)
-    print("After converting [[Page Name]] to [Page Name]:")
-    print(content)
     
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
     content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', content)
-    print("After converting [[Page Name|Display Text]] to [Display Text|Page Name]:")
-    print(content)
     
     # Convert numbered lists
     content = re.sub(r'^\d+\.\s', '# ', content, flags=re.MULTILINE)
-    print("After converting numbered lists:")
-    print(content)
     
     # Convert links (but not image links)
     content = re.sub(r'\[([^\]!]+)\]\(([^)]+)\)', r'[\1|\2]', content)
-    print("After converting links (but not image links):")
-    print(content)
     
     # Convert image links
     # Convert image links again to ensure all are processed
     content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', content)
-    print("After re-converting image links with ![[...]]:")
-    print(content)
     
     content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
-    print("After re-converting image links with ![...](...):")
-    print(content)
     
     return content, images_to_upload
 
