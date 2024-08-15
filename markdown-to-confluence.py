@@ -11,8 +11,12 @@ def read_markdown_file(filename):
         return file.read()
 
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
+    # Convert image links
+    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', markdown_content)  # This line converts image links
+    content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
+
     # Convert [[Page Name]] to [Page Name]
-    content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', markdown_content)
+    content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', content)
     
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
     content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{m.group(1).replace(" ", "+")}]', content)
