@@ -27,6 +27,11 @@ This script converts Markdown files to Confluence pages and uploads them to a sp
 2. Install the required Python libraries:
     ```bash
     pip install -r requirements.txt
+    ```  
+      
+    This can also happen with the uv package manager:
+    ```bash
+    uv sync
     ```
 
 3. Create a `.env` file in the root directory of the project and modify the following environment variables. When `CONFLUENCE_TOKEN` is given, `CONFLUENCE_USERNAME` and `CONFLUENCE_PASSWORD` are ignored.
@@ -51,6 +56,10 @@ This script converts Markdown files to Confluence pages and uploads them to a sp
 1. To convert and upload all Markdown files in the specified `BASE_DIR`, run:
     ```bash
     python markdown-to-confluence.py
+    ```
+    With uv you do:
+    ```bash
+    uv run python markdown-to-confluence.py
     ```
 
 2. To convert and upload a specific Markdown file, provide the relative path to the file as an argument:

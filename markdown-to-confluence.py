@@ -1,68 +1,94 @@
-import requests
 import json
-import re
-import os
 import mimetypes
-from requests.auth import HTTPBasicAuth
+import os
+import re
 from urllib.parse import urlparse
+
+import requests
 from dotenv import load_dotenv
+from requests.auth import HTTPBasicAuth
 
 # Load environment variables from .env file
 load_dotenv()
 
+
 def read_markdown_file(filename):
-    with open(filename, 'r', encoding='utf-8') as file:
+    with open(filename, "r", encoding="utf-8") as file:
         content = file.read()
-        if content.startswith('---'):
-            end_index = content.find('---', 3)
+        if content.startswith("---"):
+            end_index = content.find("---", 3)
             if end_index != -1:
-                content = content[end_index + 3:].strip()
+                content = content[end_index + 3 :].strip()
         # Remove the line '--------------TAGS-----------------'
-        content = re.sub(r'^--------------TAGS-----------------\s*', '', content, flags=re.MULTILINE)
+        content = re.sub(
+            r"^--------------TAGS-----------------\s*", "", content, flags=re.MULTILINE
+        )
         return content
+
 
 def convert_markdown_to_confluence(markdown_content, base_url, space_key):
     images_to_upload = []
 
     # Convert image links and store them in images_to_upload
-    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: images_to_upload.append(m.group(1)) or f'!{m.group(1)}!', markdown_content)
-    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', markdown_content)
+    content = re.sub(
+        r"(?:!\[.*?\])\((.*?)\)",
+        lambda m: images_to_upload.append(m.group(1)) or f"!{m.group(1)}!",
+        markdown_content,
+    )
+    content = re.sub(
+        r"(?:!\[.*?\])\((.*?)\)", lambda m: f"!{m.group(1)}!", markdown_content
+    )
 
-    content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
+    content = re.sub(
+        r"!\[([^\]]*)\]\(([^)]+)\)",
+        lambda m: f"!{m.group(2)}|alt={m.group(1)}!",
+        content,
+    )
 
     def process_page_name(page_name):
         return re.sub(r"[^\w\s()]", "", page_name).replace(" ", "+")
 
     # Convert [[Page Name|Display Text]] to [Display Text|Page Name]
-    content = re.sub(r'\[\[(.*?)\|(.*?)\]\]', lambda m: f'[{m.group(2)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
+    content = re.sub(
+        r"\[\[(.*?)\|(.*?)\]\]",
+        lambda m: f"[{m.group(2)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]",
+        content,
+    )
     # Convert [[Page Name]] to [Page Name]
-    content = re.sub(r'\[\[(.*?)\]\]', lambda m: f'[{m.group(1)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]', content)
-
+    content = re.sub(
+        r"\[\[(.*?)\]\]",
+        lambda m: f"[{m.group(1)}|{base_url}/display/{space_key}/{process_page_name(m.group(1))}]",
+        content,
+    )
 
     # Convert tags to labels
-    labels = re.findall(r'#(\S+)', content)
-    content = re.sub(r'#(\S+)', '', content)
-    content = re.sub(r'^\d+\.\s', '# ', content, flags=re.MULTILINE)
+    labels = re.findall(r"#(\S+)", content)
+    content = re.sub(r"#(\S+)", "", content)
+    content = re.sub(r"^\d+\.\s", "# ", content, flags=re.MULTILINE)
 
     # Convert headings
-    content = re.sub(r'^(#{7,})\s*(.*)', r'\2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{6})\s*(.*)', r'h6. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{5})\s*(.*)', r'h5. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{4})\s*(.*)', r'h4. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{3})\s*(.*)', r'h3. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{2})\s*(.*)', r'h2. \2', content, flags=re.MULTILINE)
-    content = re.sub(r'^(#{1})\s*(.*)', r'h1. \2', content, flags=re.MULTILINE)
-
+    content = re.sub(r"^(#{7,})\s*(.*)", r"\2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{6})\s*(.*)", r"h6. \2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{5})\s*(.*)", r"h5. \2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{4})\s*(.*)", r"h4. \2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{3})\s*(.*)", r"h3. \2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{2})\s*(.*)", r"h2. \2", content, flags=re.MULTILINE)
+    content = re.sub(r"^(#{1})\s*(.*)", r"h1. \2", content, flags=re.MULTILINE)
 
     # Convert links (but not image links)
-    content = re.sub(r'\[([^\]!]+)\]\(([^)]+)\)', r'[\1|\2]', content)
+    content = re.sub(r"\[([^\]!]+)\]\(([^)]+)\)", r"[\1|\2]", content)
 
     # Convert image links
-    content = re.sub(r'!\[\[([^\]]+)\]\]', lambda m: f'!{m.group(1)}!', content)
+    content = re.sub(r"!\[\[([^\]]+)\]\]", lambda m: f"!{m.group(1)}!", content)
 
-    content = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f'!{m.group(2)}|alt={m.group(1)}!', content)
+    content = re.sub(
+        r"!\[([^\]]*)\]\(([^)]+)\)",
+        lambda m: f"!{m.group(2)}|alt={m.group(1)}!",
+        content,
+    )
 
     return content, images_to_upload, labels
+
 
 def upload_image(base_url, auth, space_key, page_id, image_path):
     api_endpoint = f"{base_url}/rest/api/content/{page_id}/child/attachment"
@@ -71,15 +97,23 @@ def upload_image(base_url, auth, space_key, page_id, image_path):
     mime_type, _ = mimetypes.guess_type(image_path)
 
     # Check if the image already exists
-    existing_attachments = requests.get(api_endpoint, auth=auth).json()
-    for attachment in existing_attachments.get('results', []):
-        if attachment['title'] == image_filename:
+    if isinstance(auth, HTTPBasicAuth):
+        existing_attachments = requests.get(api_endpoint, auth=auth).json()
+    elif isinstance(auth, str):
+        existing_attachments = requests.get(
+            api_endpoint, headers={"Authorization": "Bearer " + auth}
+        ).json()
+    else:
+        raise Exception
+
+    for attachment in existing_attachments.get("results", []):
+        if attachment["title"] == image_filename:
             print(f"Image {image_filename} already exists. Skipping upload.")
             return True
 
-    with open(image_path, 'rb') as file:
-        files = {'file': (image_filename, file, mime_type)}
-        data = {'minorEdit': 'true'}
+    with open(image_path, "rb") as file:
+        files = {"file": (image_filename, file, mime_type)}
+        data = {"minorEdit": "true"}
 
         if isinstance(auth, HTTPBasicAuth):
             response = requests.post(
@@ -87,14 +121,17 @@ def upload_image(base_url, auth, space_key, page_id, image_path):
                 auth=auth,
                 files=files,
                 data=data,
-                headers={'X-Atlassian-Token': 'no-check'}
+                headers={"X-Atlassian-Token": "no-check"},
             )
         elif isinstance(auth, str):
             response = requests.post(
                 api_endpoint,
                 files=files,
                 data=data,
-                headers={'Authorization': 'Bearer ' + auth, 'X-Atlassian-Token': 'no-check'}
+                headers={
+                    "Authorization": "Bearer " + auth,
+                    "X-Atlassian-Token": "no-check",
+                },
             )
         else:
             raise Exception
@@ -107,36 +144,41 @@ def upload_image(base_url, auth, space_key, page_id, image_path):
         print(f"Response: {response.text}")
         return False
 
+
 def get_page_id(base_url, auth, space_key, title):
     api_endpoint = f"{base_url}/rest/api/content"
-    params = {
-        "type": "page",
-        "spaceKey": space_key,
-        "title": title
-    }
+    params = {"type": "page", "spaceKey": space_key, "title": title}
     if isinstance(auth, HTTPBasicAuth):
         response = requests.get(api_endpoint, auth=auth, params=params)
     elif isinstance(auth, str):
-        response = requests.get(api_endpoint, headers={'Authorization': 'Bearer ' + auth}, params=params)
+        response = requests.get(
+            api_endpoint, headers={"Authorization": "Bearer " + auth}, params=params
+        )
     else:
         raise Exception
-    if response.status_code == 200 and response.json()['results']:
-        return response.json()['results'][0]['id']
+    if response.status_code == 200 and response.json()["results"]:
+        return response.json()["results"][0]["id"]
     return None
 
-def create_confluence_page(base_url, auth, space_key, title, content, image_dir, images_to_upload, labels, parent_id=None):
+
+def create_confluence_page(
+    base_url,
+    auth,
+    space_key,
+    title,
+    content,
+    image_dir,
+    images_to_upload,
+    labels,
+    parent_id=None,
+):
     api_endpoint = f"{base_url}/rest/api/content"
 
     page_data = {
         "type": "page",
         "title": title,
         "space": {"key": space_key},
-        "body": {
-            "storage": {
-                "value": content,
-                "representation": "wiki"
-            }
-        }
+        "body": {"storage": {"value": content, "representation": "wiki"}},
     }
 
     if parent_id:
@@ -152,7 +194,9 @@ def create_confluence_page(base_url, auth, space_key, title, content, image_dir,
             if isinstance(auth, HTTPBasicAuth):
                 version_response = requests.get(api_endpoint, auth=auth)
             elif isinstance(auth, str):
-                version_response = requests.get(api_endpoint, headers={"Authorization": "Bearer " + auth})
+                version_response = requests.get(
+                    api_endpoint, headers={"Authorization": "Bearer " + auth}
+                )
             else:
                 raise Exception
             version_response.raise_for_status()
@@ -166,14 +210,17 @@ def create_confluence_page(base_url, auth, space_key, title, content, image_dir,
                     auth=auth,
                     headers={"Content-Type": "application/json"},
                     data=json.dumps(page_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             elif isinstance(auth, str):
                 response = requests.put(
                     api_endpoint,
-                    headers={"Content-Type": "application/json", "Authorization": "Bearer " + auth},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + auth,
+                    },
                     data=json.dumps(page_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             else:
                 raise Exception
@@ -187,20 +234,23 @@ def create_confluence_page(base_url, auth, space_key, title, content, image_dir,
                     auth=auth,
                     headers={"Content-Type": "application/json"},
                     data=json.dumps(page_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             elif isinstance(auth, str):
                 response = requests.post(
                     api_endpoint,
-                    headers={"Content-Type": "application/json", "Authorization": "Bearer " + auth},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + auth,
+                    },
                     data=json.dumps(page_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             else:
                 raise Exception
             response.raise_for_status()
             print("Page created successfully!")
-            page_id = response.json()['id']
+            page_id = response.json()["id"]
 
         # Add labels to the page
         if labels:
@@ -212,21 +262,26 @@ def create_confluence_page(base_url, auth, space_key, title, content, image_dir,
                     auth=auth,
                     headers={"Content-Type": "application/json"},
                     data=json.dumps(label_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             elif isinstance(auth, str):
                 label_response = requests.post(
                     label_endpoint,
-                    headers={"Content-Type": "application/json", "Authorization": "Bearer " + auth},
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + auth,
+                    },
                     data=json.dumps(label_data),
-                    verify=True  # Only use this for testing with self-signed certificates
+                    verify=True,  # Only use this for testing with self-signed certificates
                 )
             else:
                 raise Exception
             if label_response.status_code == 200:
                 print("Labels added successfully!")
             else:
-                print(f"Failed to add labels. Status code: {label_response.status_code}")
+                print(
+                    f"Failed to add labels. Status code: {label_response.status_code}"
+                )
                 print(f"Response: {label_response.text}")
 
         page_url = f"{base_url}/pages/viewpage.action?pageId={page_id}"
@@ -251,6 +306,7 @@ def create_confluence_page(base_url, auth, space_key, title, content, image_dir,
         print(f"Response content: {response.text}")
     except Exception as err:
         print(f"An unexpected error occurred: {err}")
+
 
 if __name__ == "__main__":
     import sys
@@ -285,13 +341,15 @@ if __name__ == "__main__":
     for markdown_file in markdown_files:
         # Read and process the Markdown file
         markdown_content = read_markdown_file(markdown_file)
-        confluence_content, images_to_upload, labels = convert_markdown_to_confluence(markdown_content, base_url, space_key)
+        confluence_content, images_to_upload, labels = convert_markdown_to_confluence(
+            markdown_content, base_url, space_key
+        )
 
         # Use the filename (without .md) as the title
         title = os.path.splitext(os.path.basename(markdown_file))[0]
 
         # Create the Confluence page and upload images
-        if token != '':
+        if token != "":
             auth = token
         else:
             auth = HTTPBasicAuth(username, password)
@@ -300,8 +358,29 @@ if __name__ == "__main__":
             parent_id = get_page_id(base_url, auth, space_key, folder_name)
             if not parent_id:
                 print(f"Creating parent page: {folder_name}")
-                create_confluence_page(base_url, auth, space_key, folder_name, "", image_dir, [], [])
+                create_confluence_page(
+                    base_url, auth, space_key, folder_name, "", image_dir, [], []
+                )
                 parent_id = get_page_id(base_url, auth, space_key, folder_name)
-            create_confluence_page(base_url, auth, space_key, title, confluence_content, image_dir, images_to_upload, labels, parent_id)
+            create_confluence_page(
+                base_url,
+                auth,
+                space_key,
+                title,
+                confluence_content,
+                image_dir,
+                images_to_upload,
+                labels,
+                parent_id,
+            )
         else:
-            create_confluence_page(base_url, auth, space_key, title, confluence_content, image_dir, images_to_upload, labels)
+            create_confluence_page(
+                base_url,
+                auth,
+                space_key,
+                title,
+                confluence_content,
+                image_dir,
+                images_to_upload,
+                labels,
+            )
